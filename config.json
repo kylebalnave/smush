@@ -1,0 +1,10 @@
+{
+    "threads": 5,
+    "dir": "./test/images/",
+    "reports": [
+        {
+            "className": "semblance.reporters.JunitReport",
+            "out": "./test/reports/ss.junit"
+        }
+    ]
+}	

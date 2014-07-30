@@ -1,7 +1,11 @@
 package smush.runners;
 
+import java.io.File;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.logging.Logger;
+import semblance.io.FileUtils;
 import semblance.runners.MultiThreadRunner;
 import semblance.runners.Runner;
 import static semblance.runners.Runner.callRunnerSequence;
@@ -13,6 +17,8 @@ import static semblance.runners.Runner.callRunnerSequence;
  * @author kyleb2
  */
 public class SmushRunner extends MultiThreadRunner {
+    
+    public static final String KEY_IMAGE_DIR = "dir";
 
     /**
      * @param args the command line arguments
@@ -31,7 +37,16 @@ public class SmushRunner extends MultiThreadRunner {
 
     @Override
     protected List<Runner> getRunnerCollection() {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        List<Runner> queue = new ArrayList<Runner>();
+        String imageDir = (String) getConfigValue(KEY_IMAGE_DIR, "./images");
+        Map<String, File> files = FileUtils.listFiles(imageDir);
+        for(File image : files.values()) {
+            String path = image.getAbsolutePath();
+            if(path.endsWith(".png")) {
+                queue.add(new PngRunner(image));
+            }
+        }
+        return queue;
     }
 
 }
