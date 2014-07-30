@@ -66,7 +66,7 @@ public class PngRunner extends Runner implements Callable<List<IResult>> {
         } catch (Exception ex) {
             results.add(new ErrorResult(fileToOptimize.getAbsolutePath(), ex.getMessage()));
         }
-        results.add(new PassResult(fileToOptimize.getAbsolutePath(), String.format("Processed %d files in %d milliseconds, saving %d bytes", optimizer.getStats().size(), System.currentTimeMillis() - start, optimizer.getTotalSavings())));
+        results.add(new PassResult(String.format("Processed %s in %d milliseconds, saving %d bytes", fileToOptimize.getAbsolutePath(), optimizer.getStats().size(), System.currentTimeMillis() - start, optimizer.getTotalSavings())));
 
         return results;
     }
