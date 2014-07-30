@@ -55,7 +55,13 @@ public class SmushRunner extends MultiThreadRunner {
             String path = image.getAbsolutePath();
             if (path.endsWith(".png")) {
                 queue.add(new PngRunner(image));
+            } 
+            /*
+            else if (path.endsWith(".jpg") || path.endsWith(".jpeg")) {
+                // @TODO this optimisation is pants at the moment and will make your file bigger!
+                queue.add(new JpgRunner(image));
             }
+            */
         }
         return queue;
     }
@@ -69,8 +75,6 @@ public class SmushRunner extends MultiThreadRunner {
             Set<String> extensions = new HashSet<String>();
             extensions.add("jpg");
             extensions.add("jpeg");
-            extensions.add("png");
-            extensions.add("gif");
             SmushImages smush = new SmushImages(imageDir, extensions);
             smush.setVerbose(false);
             smush.setDryRun(false);
