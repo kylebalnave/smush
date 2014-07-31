@@ -1,7 +1,5 @@
 {
-    "threads": 5,
     "dir": "./test/images",
-    "useSmushItService" : true,
     "reports": [
         {
             "className": "semblance.reporters.JunitReport",

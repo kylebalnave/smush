@@ -1,35 +1,31 @@
 package smush.runners;
 
 import com.abhyrama.smushit.SmushImages;
-import java.io.File;
+import com.abhyrama.smushit.SmushItResultVo;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.Callable;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import semblance.io.FileUtils;
 import semblance.results.ErrorResult;
 import semblance.results.IResult;
-import semblance.runners.MultiThreadRunner;
+import semblance.results.PassResult;
 import semblance.runners.Runner;
 import static semblance.runners.Runner.callRunnerSequence;
 
 /**
- * Optimises JPEG and PNG files as part of a CI System
- *
- * https://github.com/depsypher/pngtastic
- * https://code.google.com/p/pngtastic/downloads/list
- *
- * https://github.com/abhirama/smushit
+ * Optimises JPEG and PNG files as part of a CI System Wraps
+ * https://github.com/abhirama/smushit to use with Semblance
  *
  * @author kyleb2
  */
-public class SmushRunner extends MultiThreadRunner {
+public class SmushRunner extends Runner implements Callable<List<IResult>> {
 
     public static final String KEY_IMAGE_DIR = "dir";
-    public static final String KEY_USE_WEB_SERVICE = "useSmushItService";
 
     /**
      * @param args the command line arguments
@@ -47,43 +43,27 @@ public class SmushRunner extends MultiThreadRunner {
     }
 
     @Override
-    protected List<Runner> getRunnerCollection() {
-        List<Runner> queue = new ArrayList<Runner>();
-        String imageDir = (String) getConfigValue(KEY_IMAGE_DIR, "./");
-        Map<String, File> files = FileUtils.listFiles(imageDir);
-        for (File image : files.values()) {
-            String path = image.getAbsolutePath();
-            if (path.endsWith(".png")) {
-                queue.add(new PngRunner(image));
-            } 
-            /*
-            else if (path.endsWith(".jpg") || path.endsWith(".jpeg")) {
-                // @TODO this optimisation is pants at the moment and will make your file bigger!
-                queue.add(new JpgRunner(image));
+    public List<IResult> call() throws Exception {
+        results = new ArrayList<IResult>();
+        String imageDir = (String) getConfigValue(SmushRunner.KEY_IMAGE_DIR, "./");
+        Set<String> extensions = new HashSet<String>();
+        extensions.add("jpg");
+        extensions.add("jpeg");
+        extensions.add("png");
+        extensions.add("gif");
+        SmushImages smush = new SmushImages(imageDir, extensions);
+        smush.setVerbose(false);
+        smush.setDryRun(false);
+        try {
+            long start = System.currentTimeMillis();
+            List<SmushItResultVo> smushResults = smush.smush();
+            results.add(new PassResult(String.format("SmushIt successfull returned images in %sms", System.currentTimeMillis() - start)));
+            for (SmushItResultVo sResult : smushResults) {
+                results.add(new PassResult(String.format("SmushIt saved %s%s", sResult.getSavingPercentage(), "%")));
             }
-            */
-        }
-        return queue;
-    }
-
-    @Override
-    public List<IResult> call() throws Exception, Error {
-        results = super.call();
-        Boolean useSmushItService = (Boolean) getConfigValue(KEY_USE_WEB_SERVICE, false);
-        String imageDir = (String) getConfigValue(KEY_IMAGE_DIR, "./");
-        if (useSmushItService) {
-            Set<String> extensions = new HashSet<String>();
-            extensions.add("jpg");
-            extensions.add("jpeg");
-            SmushImages smush = new SmushImages(imageDir, extensions);
-            smush.setVerbose(false);
-            smush.setDryRun(false);
-            try {
-                smush.smush();
-            } catch (Exception ex) {
-                Logger.getLogger(SmushRunner.class.getName()).log(Level.SEVERE, null, ex);
-                results.add(new ErrorResult("Error using SmushIt service", ex.getMessage()));
-            }
+        } catch (IOException ex) {
+            Logger.getLogger(SmushRunner.class.getName()).log(Level.SEVERE, null, ex);
+            results.add(new ErrorResult("Exception using SmushIt service in " + imageDir, ex.getMessage()));
         }
         return results;
     }
