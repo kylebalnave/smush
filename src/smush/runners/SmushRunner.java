@@ -1,5 +1,7 @@
 package smush.runners;
 
+import com.abhyrama.smushit.DirectoryFilter;
+import com.abhyrama.smushit.MyFileFilter;
 import com.abhyrama.smushit.SmushImages;
 import com.abhyrama.smushit.SmushItResultVo;
 import java.io.IOException;
@@ -48,10 +50,11 @@ public class SmushRunner extends Runner implements Callable<List<IResult>> {
         String imageDir = (String) getConfigValue(SmushRunner.KEY_IMAGE_DIR, "./");
         Set<String> extensions = new HashSet<String>();
         extensions.add("jpg");
-        extensions.add("jpeg");
         extensions.add("png");
         extensions.add("gif");
         SmushImages smush = new SmushImages(imageDir, extensions);
+        smush.setImageFileFilter(new MyFileFilter(extensions, Integer.MAX_VALUE));
+        smush.setDirectoryFilter(new DirectoryFilter());
         smush.setVerbose(false);
         smush.setDryRun(false);
         try {
